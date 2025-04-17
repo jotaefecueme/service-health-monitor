@@ -110,4 +110,4 @@ with tabs[1]:
 # Auto-refresh
 st.write("_This dashboard auto-refreshes based on the selected interval._")
 time.sleep(update_interval)
-st.experimental_rerun()
+st.rerun()
