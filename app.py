@@ -105,13 +105,9 @@ with tabs[1]:
         df_srv = df[df['Service'] == name]
         if not df_srv.empty:
             chart = df_srv.set_index('Timestamp')['Response Time (s)']
-            st.line_chart(chart, height=200, key=name)
+            st.line_chart(chart, height=200)
 
 # Auto-refresh
-st.experimental_set_query_params(_refresh=int(time.time()))
-st.sidebar.button("Refresh Now", on_click=st.experimental_rerun)
 st.write("_This dashboard auto-refreshes based on the selected interval._")
-
-# Sleep to control refresh cadence
 time.sleep(update_interval)
 st.experimental_rerun()
