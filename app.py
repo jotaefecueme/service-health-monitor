@@ -26,17 +26,24 @@ st.set_page_config(page_title="Service Health Monitor", page_icon="🛡️")
 # Title of the dashboard
 st.title("🛡️ Service Health Monitor")
 
-# Fetch and collect data
-code, resp_time = fetch_health(SERVICE_URL)
+# ---------------- Check Service Status ----------------
+if 'last_check' not in st.session_state or time.time() - st.session_state.last_check > 60:
+    # Fetch data if it's the first load or more than 60 seconds have passed
+    code, resp_time = fetch_health(SERVICE_URL)
+    st.session_state.last_check = time.time()  # Store the timestamp of the last check
+    
+    # Store the results in session state
+    st.session_state.status_code = code
+    st.session_state.response_time = resp_time
 
-# Display the status
-if code == 200:
+# ---------------- Display Status ----------------
+if st.session_state.status_code == 200:
     st.success(f"✅ El servicio está **EN LÍNEA**.")
-    st.write(f"⏱️ Último tiempo de respuesta: {resp_time} segundos.")
+    st.write(f"⏱️ Último tiempo de respuesta: {st.session_state.response_time} segundos.")
 else:
-    st.error(f"❌ El servicio está **CAÍDO**. Error: {resp_time}")
+    st.error(f"❌ El servicio está **CAÍDO**. Error: {st.session_state.response_time}")
 
-# Auto-refresh every minute
+# Auto-refresh every minute (but without resetting the session state every time)
 st.write("_This page refreshes every minute to check the service status._")
 time.sleep(60)
 st.experimental_rerun()
