@@ -4,13 +4,17 @@ import time
 from datetime import datetime
 
 # ---------------- Configuration ----------------
-SERVICE_URL = "https://dynamic-classifier.onrender.com/health"
+# Servicios predefinidos en el código
+SERVICES = {
+    "Classifier Health": "https://dynamic-classifier.onrender.com/health",
+    "Another Service": "https://another-service.com/health"
+}
 
 # ---------------- Caching ----------------
 @st.cache_data(ttl=60)
 def fetch_health(url, timeout=10):
     """
-    Perform a GET request to the health endpoint and return status_code, response_time.
+    Realiza una solicitud GET al endpoint de salud y devuelve el código de estado, el tiempo de respuesta.
     """
     start = time.time()
     try:
@@ -20,30 +24,51 @@ def fetch_health(url, timeout=10):
     except requests.RequestException as e:
         return None, str(e)
 
+# ---------------- Sidebar ----------------
+st.set_page_config(page_title="Monitor de Servicios", page_icon="🛡️")
+
+st.sidebar.title("Configuración de Servicios")
+
+# Control de intervalo de actualización
+update_interval = st.sidebar.number_input(
+    "Intervalo de actualización (segundos)", min_value=10, max_value=3600, value=30, step=10
+)
+
 # ---------------- Main Dashboard ----------------
-st.set_page_config(page_title="Service Health Monitor", page_icon="🛡️")
+st.title("🛡️ Monitor de Estado de Servicios")
 
-# Title of the dashboard
-st.title("🛡️ Service Health Monitor")
+# Obtener los resultados de la última comprobación desde la sesión (si existen)
+if 'results' not in st.session_state:
+    st.session_state.results = []
 
-# ---------------- Check Service Status ----------------
-if 'last_check' not in st.session_state or time.time() - st.session_state.last_check > 60:
-    # Fetch data if it's the first load or more than 60 seconds have passed
-    code, resp_time = fetch_health(SERVICE_URL)
-    st.session_state.last_check = time.time()  # Store the timestamp of the last check
-    
-    # Store the results in session state
-    st.session_state.status_code = code
-    st.session_state.response_time = resp_time
+# Fetch and collect data
+for name, url in SERVICES.items():
+    code, resp_time = fetch_health(url)
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    status = 'UP' if code == 200 else 'DOWN'
+    result = {
+        'Service': name,
+        'URL': url,
+        'Timestamp': timestamp,
+        'Status': status,
+        'HTTP Code': code if code else 'Error',
+        'Response Time (s)': resp_time if resp_time else 'N/A',
+        'Error': resp_time if code != 200 else ''
+    }
+    st.session_state.results.append(result)
 
-# ---------------- Display Status ----------------
-if st.session_state.status_code == 200:
-    st.success(f"✅ El servicio está **EN LÍNEA**.")
-    st.write(f"⏱️ Último tiempo de respuesta: {st.session_state.response_time} segundos.")
-else:
-    st.error(f"❌ El servicio está **CAÍDO**. Error: {st.session_state.response_time}")
+# Mostrar resultados de los servicios
+for res in st.session_state.results:
+    st.subheader(f"{res['Service']} - {res['Status']}")
+    st.write(f"**URL**: {res['URL']}")
+    st.write(f"**Código HTTP**: {res['HTTP Code']}")
+    st.write(f"**Tiempo de Respuesta**: {res['Response Time (s)']} segundos")
+    st.write(f"**Última Comprobación**: {res['Timestamp']}")
+    if res['Status'] == 'DOWN':
+        st.error(f"Error: {res['Error']}")
+    st.divider()
 
-# Auto-refresh every minute (but without resetting the session state every time)
-st.write("_This page refreshes every minute to check the service status._")
-time.sleep(60)
-st.experimental_rerun()
+# ---------------- Auto-refresh ----------------
+st.write(f"Próxima actualización en {update_interval} segundos...")
+time.sleep(update_interval)
+st.rerun()
