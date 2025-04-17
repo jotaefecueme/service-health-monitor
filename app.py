@@ -6,8 +6,7 @@ from datetime import datetime
 # ---------------- Configuration ----------------
 # Servicios predefinidos en el código
 SERVICES = {
-    "Classifier Health": "https://dynamic-classifier.onrender.com/health",
-    "Another Service": "https://another-service.com/health"
+    "Classifier Health": "https://dynamic-classifier.onrender.com/health"
 }
 
 # ---------------- Caching ----------------
