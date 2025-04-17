@@ -4,16 +4,16 @@ import time
 from datetime import datetime
 
 # ---------------- Configuration ----------------
-# Servicios predefinidos en el código
+# Predefined services in the code
 SERVICES = {
-    "Classifier Health": "https://dynamic-classifier.onrender.com/health"
+    "Dynamic Classifier": "https://dynamic-classifier.onrender.com/health"
 }
 
 # ---------------- Caching ----------------
 @st.cache_data(ttl=60)
 def fetch_health(url, timeout=10):
     """
-    Realiza una solicitud GET al endpoint de salud y devuelve el código de estado, el tiempo de respuesta.
+    Perform a GET request to the health endpoint and return the status code, response time.
     """
     start = time.time()
     try:
@@ -24,19 +24,19 @@ def fetch_health(url, timeout=10):
         return None, str(e)
 
 # ---------------- Sidebar ----------------
-st.set_page_config(page_title="Monitor de Servicios", page_icon="🛡️")
+st.set_page_config(page_title="Service Monitor", page_icon="🛡️")
 
-st.sidebar.title("Configuración de Servicios")
+st.sidebar.title("Service Configuration")
 
-# Control de intervalo de actualización
+# Control the update interval
 update_interval = st.sidebar.number_input(
-    "Intervalo de actualización (segundos)", min_value=10, max_value=3600, value=30, step=10
+    "Update interval (seconds)", min_value=10, max_value=3600, value=30, step=10
 )
 
 # ---------------- Main Dashboard ----------------
-st.title("🛡️ Monitor de Estado de Servicios")
+st.title("🛡️ Service Status Monitor")
 
-# Obtener los resultados de la última comprobación desde la sesión (si existen)
+# Get the results of the last check from the session (if they exist)
 if 'results' not in st.session_state:
     st.session_state.results = []
 
@@ -56,18 +56,18 @@ for name, url in SERVICES.items():
     }
     st.session_state.results.append(result)
 
-# Mostrar resultados de los servicios
+# Display service results
 for res in st.session_state.results:
     st.subheader(f"{res['Service']} - {res['Status']}")
     st.write(f"**URL**: {res['URL']}")
-    st.write(f"**Código HTTP**: {res['HTTP Code']}")
-    st.write(f"**Tiempo de Respuesta**: {res['Response Time (s)']} segundos")
-    st.write(f"**Última Comprobación**: {res['Timestamp']}")
+    st.write(f"**HTTP Code**: {res['HTTP Code']}")
+    st.write(f"**Response Time**: {res['Response Time (s)']} seconds")
+    st.write(f"**Last Checked**: {res['Timestamp']}")
     if res['Status'] == 'DOWN':
         st.error(f"Error: {res['Error']}")
     st.divider()
 
 # ---------------- Auto-refresh ----------------
-st.write(f"Próxima actualización en {update_interval} segundos...")
+st.write(f"Next update in {update_interval} seconds...")
 time.sleep(update_interval)
-st.rerun()
+st.experimental_rerun()
