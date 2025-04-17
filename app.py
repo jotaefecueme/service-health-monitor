@@ -57,10 +57,10 @@ for name, url in SERVICES.items():
         'Error': resp_time if code != 200 else ''
     }
     # Save result in session state
-    st.session_state.results.append(result)
+    st.session_state.results = [result]  # This will replace the old results with new ones
 
-# Display service results
-with status_placeholder.container(): 
+# ---------------- Replace the placeholder content with the current data ----------------
+with status_placeholder.container():
     for res in st.session_state.results:
         st.subheader(f"{res['Service']} - {res['Status']}")
         st.write(f"**URL**: {res['URL']}")
@@ -74,5 +74,7 @@ with status_placeholder.container():
 # ---------------- Auto-refresh ----------------
 st.write(f"Next update in {update_interval} seconds...")
 time.sleep(update_interval)
-status_placeholder.empty()  
-st.rerun()  
+
+# Re-run the app to update
+status_placeholder.empty()  # Empty the placeholder before rerunning the page
+st.rerun()  # Rerun the app to refresh the content
