@@ -62,13 +62,25 @@ for name, url in SERVICES.items():
 # ---------------- Replace the placeholder content with the current data ----------------
 with status_placeholder.container():
     for res in st.session_state.results:
-        st.subheader(f"{res['Service']} - {res['Status']}")
-        st.write(f"**URL**: {res['URL']}")
-        st.write(f"**HTTP Code**: {res['HTTP Code']}")
-        st.write(f"**Response Time**: {res['Response Time (s)']} seconds")
-        st.write(f"**Last Checked**: {res['Timestamp']}")
-        if res['Status'] == 'DOWN':
-            st.error(f"Error: {res['Error']}")
+        if res['Status'] == 'UP':
+            # If the service is UP, display with a green background
+            st.markdown(f"""
+                <div style="background-color: #4CAF50; color: white; padding: 10px; border-radius: 5px;">
+                    <h3>{res['Service']} - {res['Status']}</h3>
+                    <p><strong>URL</strong>: {res['URL']}</p>
+                    <p><strong>HTTP Code</strong>: {res['HTTP Code']}</p>
+                    <p><strong>Response Time</strong>: {res['Response Time (s)']} seconds</p>
+                    <p><strong>Last Checked</strong>: {res['Timestamp']}</p>
+                </div>
+            """, unsafe_allow_html=True)
+        else:
+            # If the service is DOWN, display with an error message in red
+            st.error(f"{res['Service']} - {res['Status']}")
+            st.write(f"**URL**: {res['URL']}")
+            st.write(f"**HTTP Code**: {res['HTTP Code']}")
+            st.write(f"**Response Time**: {res['Response Time (s)']} seconds")
+            st.write(f"**Last Checked**: {res['Timestamp']}")
+            st.write(f"Error: {res['Error']}")
         st.divider()
 
 # ---------------- Auto-refresh ----------------
