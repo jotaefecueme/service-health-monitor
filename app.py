@@ -6,7 +6,7 @@ from datetime import datetime
 # ---------------- Configuration ----------------
 # Predefined services in the code
 SERVICES = {
-    "Dynamic Classifier": "https://dynamic-classifier.onrender.com/health"
+    "Classifier Health": "https://dynamic-classifier.onrender.com/health"
 }
 
 # ---------------- Caching ----------------
@@ -40,6 +40,9 @@ st.title("🛡️ Service Status Monitor")
 if 'results' not in st.session_state:
     st.session_state.results = []
 
+# ---------------- Create an empty placeholder for dynamic content ----------------
+status_placeholder = st.empty()
+
 # Fetch and collect data
 for name, url in SERVICES.items():
     code, resp_time = fetch_health(url)
@@ -57,17 +60,19 @@ for name, url in SERVICES.items():
     st.session_state.results.append(result)
 
 # Display service results
-for res in st.session_state.results:
-    st.subheader(f"{res['Service']} - {res['Status']}")
-    st.write(f"**URL**: {res['URL']}")
-    st.write(f"**HTTP Code**: {res['HTTP Code']}")
-    st.write(f"**Response Time**: {res['Response Time (s)']} seconds")
-    st.write(f"**Last Checked**: {res['Timestamp']}")
-    if res['Status'] == 'DOWN':
-        st.error(f"Error: {res['Error']}")
-    st.divider()
+with status_placeholder.container():  # This will ensure the content is replaced dynamically
+    for res in st.session_state.results:
+        st.subheader(f"{res['Service']} - {res['Status']}")
+        st.write(f"**URL**: {res['URL']}")
+        st.write(f"**HTTP Code**: {res['HTTP Code']}")
+        st.write(f"**Response Time**: {res['Response Time (s)']} seconds")
+        st.write(f"**Last Checked**: {res['Timestamp']}")
+        if res['Status'] == 'DOWN':
+            st.error(f"Error: {res['Error']}")
+        st.divider()
 
 # ---------------- Auto-refresh ----------------
 st.write(f"Next update in {update_interval} seconds...")
 time.sleep(update_interval)
-st.experimental_rerun()
+status_placeholder.empty() 
+st.rerun() 
