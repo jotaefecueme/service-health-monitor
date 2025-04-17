@@ -4,7 +4,6 @@ import time
 from datetime import datetime
 
 # ---------------- Configuration ----------------
-# Predefined services in the code
 SERVICES = {
     "Classifier Health": "https://dynamic-classifier.onrender.com/health"
 }
@@ -36,7 +35,7 @@ update_interval = st.sidebar.number_input(
 # ---------------- Main Dashboard ----------------
 st.title("🛡️ Service Status Monitor")
 
-# Get the results of the last check from the session (if they exist)
+# ---------------- Check session state for results ----------------
 if 'results' not in st.session_state:
     st.session_state.results = []
 
@@ -57,10 +56,11 @@ for name, url in SERVICES.items():
         'Response Time (s)': resp_time if resp_time else 'N/A',
         'Error': resp_time if code != 200 else ''
     }
+    # Save result in session state
     st.session_state.results.append(result)
 
 # Display service results
-with status_placeholder.container():  # This will ensure the content is replaced dynamically
+with status_placeholder.container(): 
     for res in st.session_state.results:
         st.subheader(f"{res['Service']} - {res['Status']}")
         st.write(f"**URL**: {res['URL']}")
@@ -74,5 +74,5 @@ with status_placeholder.container():  # This will ensure the content is replaced
 # ---------------- Auto-refresh ----------------
 st.write(f"Next update in {update_interval} seconds...")
 time.sleep(update_interval)
-status_placeholder.empty() 
-st.rerun() 
+status_placeholder.empty()  
+st.rerun()  
