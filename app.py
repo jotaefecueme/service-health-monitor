@@ -4,73 +4,114 @@ import time
 import pandas as pd
 from datetime import datetime
 
-# Configuración del servicio
-SERVICE_URL = "https://dynamic-classifier.onrender.com/health"
-TIMEOUT = 5
-UPDATE_INTERVAL = 30  # Cada cuánto tiempo se actualiza (en segundos)
+# ---------------- Configuration ----------------
+DEFAULT_SERVICES = {
+    "Classifier Health": "https://dynamic-classifier.onrender.com/health"
+}
 
-# Configuración de Streamlit
-st.set_page_config(page_title="Estado del Servicio", page_icon="🩺")
-st.title("🛡️ Monitor de Servicio en Tiempo Real")
+# ---------------- Caching ----------------
+@st.cache_data(ttl=60)
+def fetch_health(url, timeout=10):
+    """
+    Perform a GET request to the health endpoint and return status_code, response_time, and JSON if any.
+    """
+    start = time.time()
+    try:
+        response = requests.get(url, timeout=timeout)
+        elapsed = time.time() - start
+        try:
+            data = response.json()
+        except ValueError:
+            data = None
+        return response.status_code, round(elapsed, 2), data, None
+    except requests.RequestException as e:
+        return None, None, None, str(e)
 
-# Lista para almacenar el historial de respuestas
+# ---------------- Sidebar ----------------
+st.set_page_config(page_title="Service Monitor Dashboard", layout="wide", page_icon="🛡️")
+st.sidebar.title("Settings")
+
+# Allow user to configure services
+services = st.sidebar.text_area(
+    "Service URLs (one per line, label|url):",
+    value="\n".join([f"{k}|{v}" for k, v in DEFAULT_SERVICES.items()]),
+    height=200
+)
+
+# Parse services input
+service_dict = {}
+for line in services.splitlines():
+    if '|' in line:
+        label, url = line.split('|', 1)
+        service_dict[label.strip()] = url.strip()
+
+# Control update interval
+update_interval = st.sidebar.number_input(
+    "Update interval (seconds)", min_value=10, max_value=3600, value=30, step=10
+)
+
+# ---------------- Main Dashboard ----------------
+st.title("🛡️ Service Monitor Dashboard")
+
+# Tabs for organization
+tabs = st.tabs(["Overview", "History"])
+
+# Session State for history
 if 'history' not in st.session_state:
     st.session_state.history = []
 
-# Función para realizar la comprobación
-def check_service():
-    try:
-        start = time.time()
-        response = requests.get(SERVICE_URL, timeout=TIMEOUT)
-        elapsed = time.time() - start
-        return response, elapsed
-    except requests.exceptions.RequestException as e:
-        return None, str(e)
+# Fetch and collect data
+results = []
+for name, url in service_dict.items():
+    code, resp_time, json_data, error = fetch_health(url)
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    status = 'UP' if code == 200 else 'DOWN'
+    results.append({
+        'Service': name,
+        'URL': url,
+        'Timestamp': timestamp,
+        'Status': status,
+        'HTTP Code': code if code else 'Error',
+        'Response Time (s)': resp_time if resp_time else 'N/A',
+        'Error': error
+    })
+    # Append to history
+    st.session_state.history.append(results[-1])
 
-# Realizar la comprobación y actualizar el historial
-response, elapsed = check_service()
-timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+# Overview Tab
+with tabs[0]:
+    st.subheader("Real-time Status")
+    cols = st.columns(len(results))
+    for idx, res in enumerate(results):
+        with cols[idx]:
+            if res['Status'] == 'UP':
+                st.success(f"{res['Service']}\n{res['HTTP Code']} | {res['Response Time (s)']}s")
+            else:
+                st.error(f"{res['Service']}\n{res['Error'] or res['HTTP Code']}")
+            st.caption(res['Timestamp'])
 
-# Agregar el resultado al historial
-if response:
-    status_code = response.status_code
-    response_json = response.json() if response.status_code == 200 else {}
-else:
-    status_code = "Error"
-    response_json = {}
+    st.divider()
+    st.write(f"Next update in {update_interval} seconds...")
 
-st.session_state.history.append({
-    "timestamp": timestamp,
-    "status_code": status_code,
-    "response_time": f"{elapsed:.2f}s",
-    "response_json": response_json
-})
+# History Tab
+with tabs[1]:
+    st.subheader("Response History")
+    df = pd.DataFrame(st.session_state.history)
+    st.data_editor(df, use_container_width=True)
 
-# Mostrar los resultados
-st.write(f"⏱️ Última comprobación: `{timestamp}`")
-st.write(f"⏳ Tiempo de respuesta: `{elapsed:.2f}` segundos")
-st.write(f"📦 Código de estado: `{status_code}`")
+    # Plot response times for each service
+    st.subheader("Response Time Trends")
+    for name in service_dict.keys():
+        df_srv = df[df['Service'] == name]
+        if not df_srv.empty:
+            chart = df_srv.set_index('Timestamp')['Response Time (s)']
+            st.line_chart(chart, height=200, key=name)
 
-if response and status_code == 200:
-    st.success("✅ El servicio está EN LÍNEA.")
-else:
-    st.error("❌ El servicio está CAÍDO.")
+# Auto-refresh
+st.experimental_set_query_params(_refresh=int(time.time()))
+st.sidebar.button("Refresh Now", on_click=st.experimental_rerun)
+st.write("_This dashboard auto-refreshes based on the selected interval._")
 
-# Mostrar la respuesta JSON
-st.subheader("Respuesta JSON")
-st.json(response_json)
-
-# Mostrar historial en tabla
-st.subheader("Historial de Respuestas")
-df = pd.DataFrame(st.session_state.history)
-st.dataframe(df)
-
-# Gráfico de tiempos de respuesta
-st.subheader("Gráfico de Tiempos de Respuesta")
-df['response_time'] = df['response_time'].apply(lambda x: float(x.replace("s", "")))
-st.line_chart(df[['timestamp', 'response_time']].set_index('timestamp'))
-
-# Configuración de actualización automática
-st.write(f"Actualización cada {UPDATE_INTERVAL} segundos")
-time.sleep(UPDATE_INTERVAL)  # espera para que se recargue automáticamente
+# Sleep to control refresh cadence
+time.sleep(update_interval)
 st.experimental_rerun()
