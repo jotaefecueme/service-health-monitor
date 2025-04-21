@@ -22,7 +22,7 @@ def fetch_health(url, timeout=10):
         return None, None, str(e)
 
 # ---------------- Streamlit Config ----------------
-st.set_page_config(page_title="Service Monitor", page_icon="🛡️")
+st.set_page_config(page_title="Service Status Monitor", page_icon="🛡️")
 
 # ---------------- Auto-refresh ----------------
 st_autorefresh(interval=10000, key="auto-refresh")
@@ -32,7 +32,6 @@ if "results" not in st.session_state:
     st.session_state.results = {}
 
 # ---------------- Main Content ----------------
-st.title("🛡️ Service Status Monitor")
 
 for name, url in SERVICES.items():
     code, resp_time, error = fetch_health(url)
@@ -76,5 +75,3 @@ st.markdown("""
         }
     </style>
 """, unsafe_allow_html=True)
-
-st.write("⏱️ Auto-refresh cada 10 segundos.")
