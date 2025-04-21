@@ -7,7 +7,7 @@ from streamlit_autorefresh import st_autorefresh
 
 # ---------------- Configuration ----------------
 SERVICES = {
-    "Dynamic Classifier Health": "http://localhost:8000/health" 
+    "Dynamic Classifier Health": "https://dynamic-classifier.onrender.com//health" 
 }
 
 MAX_HISTORY = 5  
