@@ -1,22 +1,16 @@
+# streamlit_app.py
+
 import streamlit as st
 import requests
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
-from fastapi import FastAPI
-
-app = FastAPI()
-
-@app.get("/health")
-async def health_check():
-    return {"status": "ok"}
 
 # ---------------- Configuration ----------------
 SERVICES = {
-    "Dynamic Classifier Health": "https://dynamic-classifier.onrender.com/health"
+    "Dynamic Classifier Health": "http://localhost:8000/health" 
 }
 
-MAX_HISTORY = 5  # Número de checks que se mantienen en historial por servicio
-
+MAX_HISTORY = 5  
 # ---------------- Caching ----------------
 @st.cache_data(ttl=60)
 def fetch_health(url, timeout=10):
@@ -39,7 +33,6 @@ if "results" not in st.session_state:
     st.session_state.results = {}
 
 # ---------------- Main Content ----------------
-
 for name, url in SERVICES.items():
     code, resp_time, error = fetch_health(url)
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
