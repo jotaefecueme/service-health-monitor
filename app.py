@@ -5,7 +5,7 @@ from streamlit_autorefresh import st_autorefresh
 
 # ---------------- Configuration ----------------
 SERVICES = {
-    "Classifier Health": "https://dynamic-classifier.onrender.com/health"
+    "Dynamic Classifier Health": "https://dynamic-classifier.onrender.com/health"
 }
 
 MAX_HISTORY = 5  # Número de checks que se mantienen en historial por servicio
@@ -24,14 +24,8 @@ def fetch_health(url, timeout=10):
 # ---------------- Streamlit Config ----------------
 st.set_page_config(page_title="Service Monitor", page_icon="🛡️")
 
-# ---------------- Sidebar ----------------
-st.sidebar.title("Service Configuration")
-update_interval = st.sidebar.number_input(
-    "Update interval (seconds)", min_value=10, max_value=3600, value=30, step=10
-)
-
 # ---------------- Auto-refresh ----------------
-st_autorefresh(interval=update_interval * 1000, key="auto-refresh")
+st_autorefresh(interval=10000, key="auto-refresh")
 
 # ---------------- Session State Init ----------------
 if "results" not in st.session_state:
@@ -65,7 +59,7 @@ for name, history in st.session_state.results.items():
     status_icon = "🟢" if latest["Status"] == "UP" else "🔴"
 
     st.markdown(f"### {status_icon} {name} — {latest['Status']}")
-    st.metric("Response Time", f"{latest['Response Time (s)']} s")
+    st.metric("Response Time", f"{latest['Response Time (s)']} s", delta=f"{latest['Response Time (s)']} s")
     st.metric("HTTP Code", latest['HTTP Code'])
     st.write(f"**Last Checked**: {latest['Timestamp']}")
     
@@ -74,4 +68,13 @@ for name, history in st.session_state.results.items():
 
     st.divider()
 
-st.write(f"⏱️ Auto-refresh cada {update_interval} segundos.")
+# Footer
+st.markdown("""
+    <style>
+        footer {
+            visibility: hidden;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+st.write("⏱️ Auto-refresh cada 10 segundos.")
