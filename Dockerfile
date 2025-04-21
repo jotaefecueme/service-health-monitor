@@ -1,14 +1,10 @@
 FROM python:3.9-slim
 
-RUN apt-get update && apt-get install -y supervisor
-
-COPY . /app
 WORKDIR /app
-
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-EXPOSE 8000 8501
+EXPOSE 8501 8000
 
-CMD ["/usr/bin/supervisord"]
+CMD ["sh", "-c", "uvicorn fastapi_app:app --host 0.0.0.0 --port 8000 & streamlit run streamlit_app.py"]
