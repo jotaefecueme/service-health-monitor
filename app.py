@@ -58,7 +58,7 @@ for name, history in st.session_state.results.items():
     status_icon = "🟢" if latest["Status"] == "UP" else "🔴"
 
     st.markdown(f"### {status_icon} {name} — {latest['Status']}")
-    st.metric("Response Time", f"{latest['Response Time (s)']} s", delta=f"{latest['Response Time (s)']} s")
+    st.metric("Response Time", f"{latest['Response Time (s)']} s")
     st.metric("HTTP Code", latest['HTTP Code'])
     st.write(f"**Last Checked**: {latest['Timestamp']}")
     
