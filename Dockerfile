@@ -7,4 +7,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 8501 8000 10000
 
-CMD ["sh", "-c", "uvicorn fastapi_app:app --host 0.0.0.0 --port $PORT & streamlit run streamlit_app.py --server.port $PORT"]
+CMD ["sh", "-c", "uvicorn health_app:app --host 0.0.0.0 --port $PORT & streamlit run app.py --server.port $PORT"]
