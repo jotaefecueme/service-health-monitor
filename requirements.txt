@@ -1,4 +1,5 @@
+fastapi
+uvicorn
 streamlit
 requests
 streamlit-autorefresh
-fastapi
