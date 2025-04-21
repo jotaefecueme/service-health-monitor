@@ -2,6 +2,13 @@ import streamlit as st
 import requests
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
 
 # ---------------- Configuration ----------------
 SERVICES = {
