@@ -7,7 +7,8 @@ from streamlit_autorefresh import st_autorefresh
 
 # ---------------- Configuration ----------------
 SERVICES = {
-    "Dynamic Classifier Health": "https://dynamic-classifier.onrender.com/health" 
+    "API-INTENT": "https://dynamic-classifier.onrender.com/health",
+    "API-RAG": "https://api-rag-5v0m.onrender.com/health"
 }
 
 MAX_HISTORY = 5  
